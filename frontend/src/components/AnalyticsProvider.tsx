@@ -28,6 +28,11 @@ export default function AnalyticsProvider({ children }: AnalyticsProviderProps) 
     if (initialized.current) {
       return;
     }
+    
+    // Skip on server-side
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const initAnalytics = async () => {
       const store = await load('analytics.json', {

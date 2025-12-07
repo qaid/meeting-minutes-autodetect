@@ -49,6 +49,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Key Features in Action](#key-features-in-action)
+- [Meeting Auto-Detection (Fork Feature)](#meeting-auto-detection-fork-feature)
 - [System Architecture](#system-architecture)
 - [For Developers](#for-developers)
 - [Enterprise Solutions](#enterprise-solutions)
@@ -92,6 +93,7 @@ Whether you're a defense consultant, enterprise executive, legal professional, o
 - **AI-Powered Summaries:** Generate summaries of your meetings using powerful language models.
 - **Multi-Platform:** Works on macOS, Windows, and Linux.
 - **Open Source:** Meetily is open source and free to use.
+- **🆕 Meeting Auto-Detection:** Automatically detect Zoom, Microsoft Teams, and Google Meet meetings and start recording (Fork feature).
 
 ## Installation
 
@@ -123,9 +125,11 @@ Build from source following our detailed guides:
 ```bash
 git clone https://github.com/Zackriya-Solutions/meeting-minutes
 cd meeting-minutes/frontend
-pnpm install
-pnpm run tauri:build
+bun install
+bun run tauri:build
 ```
+
+> **Note:** This fork uses [Bun](https://bun.sh/) as the package manager instead of pnpm. Install Bun with: `curl -fsSL https://bun.sh/install | bash`
 
 ## Key Features in Action
 
@@ -173,6 +177,43 @@ Built-in support for hardware acceleration across platforms:
 
 Automatically enabled at build time - no configuration needed.
 
+## Meeting Auto-Detection (Fork Feature)
+
+> **⚠️ Note:** This feature has been tested on macOS only. Windows support is experimental and untested.
+
+This fork adds automatic meeting detection that can start recording when you join a video call:
+
+### Supported Applications
+
+| Application | macOS | Windows | Linux |
+|-------------|-------|---------|-------|
+| **Zoom** | ✅ Full support | ⚠️ Untested | ⚠️ Untested |
+| **Microsoft Teams** | ✅ Full support | ⚠️ Untested | ⚠️ Untested |
+| **Google Meet** | 🔶 Limited* | ❌ Not implemented | ❌ Not implemented |
+
+*Google Meet runs in browsers, so detection requires window title inspection which has limited support.
+
+### How It Works
+
+1. **Process Monitoring:** The app monitors running processes to detect meeting applications
+2. **Meeting Detection:** When Zoom or Teams processes are detected, the app identifies an active meeting
+3. **Auto-Recording:** Optionally start recording automatically when a meeting is detected
+4. **Auto-Stop:** Optionally stop recording when the meeting ends
+
+### Configuration
+
+Enable meeting detection in Settings → Meeting Detection:
+
+- **Enable/Disable:** Toggle automatic meeting detection
+- **Auto-start Recording:** Automatically begin recording when a meeting is detected
+- **Auto-stop Recording:** Automatically stop recording when the meeting ends
+- **Notifications:** Get notified when meetings are detected
+- **Per-app Settings:** Enable/disable detection for specific apps (Zoom, Teams, Google Meet)
+
+### Privacy
+
+Meeting detection only monitors process names to identify video conferencing applications. **No meeting content, audio, or video is accessed until you explicitly start recording.** All detection happens locally on your device.
+
 ## System Architecture
 
 Meetily is a single, self-contained application built with [Tauri](https://tauri.app/). It uses a Rust-based backend to handle all the core logic, and a Next.js frontend for the user interface.
@@ -182,6 +223,38 @@ For more details, see the [Architecture documentation](docs/architecture.md).
 ## For Developers
 
 If you want to contribute to Meetily or build it from source, you'll need to have Rust and Node.js installed. For detailed build instructions, please see the [Building from Source guide](docs/BUILDING.md).
+
+### Package Manager
+
+This fork uses **[Bun](https://bun.sh/)** as the JavaScript package manager instead of pnpm:
+
+```bash
+# Install Bun (macOS/Linux)
+curl -fsSL https://bun.sh/install | bash
+
+# Install Bun (Windows)
+powershell -c "irm bun.sh/install.ps1 | iex"
+
+# Install dependencies
+cd frontend
+bun install
+
+# Development
+bun run tauri:dev
+
+# Build
+bun run tauri:build
+```
+
+### Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `bun install` | Install dependencies |
+| `bun dev` | Start Next.js dev server |
+| `bun run tauri:dev` | Start Tauri in development mode |
+| `bun run tauri:build` | Build production app |
+| `bun tauri dev` | Alternative dev command |
 
 ## Enterprise Solutions
 

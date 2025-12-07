@@ -40,6 +40,7 @@ pub mod api;
 pub mod audio;
 pub mod console_utils;
 pub mod database;
+pub mod meeting_detector;
 pub mod notifications;
 pub mod ollama;
 pub mod openrouter;
@@ -398,6 +399,7 @@ pub fn run() {
             None::<notifications::manager::NotificationManager<tauri::Wry>>,
         )) as NotificationManagerState<tauri::Wry>)
         .manage(audio::init_system_audio_state())
+        .manage(meeting_detector::commands::init_meeting_detector_state())
         .setup(|_app| {
             log::info!("Application setup complete");
 
@@ -477,6 +479,22 @@ pub fn run() {
             } else {
                 log::warn!("Failed to resolve resource directory for templates");
             }
+
+            // Auto-start meeting detection monitor if enabled in settings
+            let app_for_meeting_detection = _app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let detector_state = app_for_meeting_detection.state::<meeting_detector::commands::MeetingDetectorState>();
+                let detector = detector_state.read().await;
+                let settings = detector.get_settings().await;
+                
+                if settings.enabled {
+                    log::info!("Meeting detection is enabled, auto-starting monitor...");
+                    detector.start_monitoring(app_for_meeting_detection.clone()).await;
+                    log::info!("Meeting detection monitor started automatically");
+                } else {
+                    log::info!("Meeting detection is disabled, skipping auto-start");
+                }
+            });
 
             Ok(())
         })
@@ -660,6 +678,15 @@ pub fn run() {
             // System settings commands
             #[cfg(target_os = "macos")]
             utils::open_system_settings,
+            // Meeting detection commands
+            meeting_detector::commands::enable_meeting_detection,
+            meeting_detector::commands::disable_meeting_detection,
+            meeting_detector::commands::get_meeting_detection_status,
+            meeting_detector::commands::get_meeting_detection_settings,
+            meeting_detector::commands::set_meeting_detection_settings,
+            meeting_detector::commands::check_for_active_meeting,
+            meeting_detector::commands::start_meeting_monitor,
+            meeting_detector::commands::stop_meeting_monitor,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Switch } from "./ui/switch"
-import { FolderOpen } from "lucide-react"
+import { FolderOpen, Sun, Moon, Monitor } from "lucide-react"
+import { useTheme } from "@/contexts/ThemeContext"
 import { invoke } from "@tauri-apps/api/core"
 import Analytics from "@/lib/analytics"
 import AnalyticsConsentSwitch from "./AnalyticsConsentSwitch"
@@ -34,13 +35,22 @@ interface NotificationSettings {
   }
 }
 
+type ThemeOption = 'light' | 'dark' | 'system';
+
 export function PreferenceSettings() {
+  const { theme, setTheme } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean | null>(null);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
   const [storageLocations, setStorageLocations] = useState<StorageLocations | null>(null);
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [previousNotificationsEnabled, setPreviousNotificationsEnabled] = useState<boolean | null>(null);
+
+  const themeOptions: { value: ThemeOption; label: string; icon: React.ReactNode }[] = [
+    { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
+    { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+    { value: 'system', label: 'System', icon: <Monitor className="w-4 h-4" /> },
+  ];
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -155,21 +165,45 @@ export function PreferenceSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Theme Section */}
+      <div className="bg-white dark:!bg-gray-800 rounded-lg border border-gray-200 dark:!border-gray-700 p-6 shadow-sm">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Theme</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose how Meetily looks. Select a theme or sync with your system settings.</p>
+        </div>
+        <div className="flex gap-2">
+          {themeOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setTheme(option.value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                theme === option.value
+                  ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300'
+                  : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+              }`}
+            >
+              {option.icon}
+              <span className="text-sm font-medium">{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Notifications Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white dark:!bg-gray-800 rounded-lg border border-gray-200 dark:!border-gray-700 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Notifications</h3>
-            <p className="text-sm text-gray-600">Enable or disable notifications of start and end of meeting</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Notifications</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Enable or disable notifications of start and end of meeting</p>
           </div>
           <Switch checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
         </div>
       </div>
 
       {/* Data Storage Locations Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Storage Locations</h3>
-        <p className="text-sm text-gray-600 mb-6">
+      <div className="bg-white dark:!bg-gray-800 rounded-lg border border-gray-200 dark:!border-gray-700 p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Storage Locations</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
           View and access where Meetily stores your data
         </p>
 
@@ -205,14 +239,14 @@ export function PreferenceSettings() {
           </div> */}
 
           {/* Recordings Location */}
-          <div className="p-4 border rounded-lg bg-gray-50">
-            <div className="font-medium mb-2">Meeting Recordings</div>
-            <div className="text-sm text-gray-600 mb-3 break-all font-mono text-xs">
+          <div className="p-4 border dark:!border-gray-600 rounded-lg bg-gray-50 dark:!bg-gray-700">
+            <div className="font-medium mb-2 text-gray-900 dark:text-gray-100">Meeting Recordings</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3 break-all font-mono text-xs">
               {storageLocations?.recordings || 'Loading...'}
             </div>
             <button
               onClick={() => handleOpenFolder('recordings')}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
             >
               <FolderOpen className="w-4 h-4" />
               Open Folder
@@ -220,15 +254,15 @@ export function PreferenceSettings() {
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-blue-50 rounded-md">
-          <p className="text-xs text-blue-800">
+        <div className="mt-4 p-3 bg-blue-50 dark:!bg-blue-900/30 rounded-md">
+          <p className="text-xs text-blue-800 dark:text-blue-300">
             <strong>Note:</strong> Database and models are stored together in your application data directory for unified management.
           </p>
         </div>
       </div>
 
       {/* Analytics Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-white dark:!bg-gray-800 rounded-lg border border-gray-200 dark:!border-gray-700 p-6 shadow-sm">
         <AnalyticsConsentSwitch />
       </div>
     </div>

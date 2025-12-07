@@ -1,3 +1,7 @@
+// ANALYTICS DISABLED - All methods are no-ops
+// To re-enable analytics, restore the original implementation and set DISABLED = false
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { invoke } from '@tauri-apps/api/core';
 
 export interface AnalyticsProperties {
@@ -19,6 +23,8 @@ export interface UserSession {
 }
 
 export class Analytics {
+  // Analytics is permanently disabled
+  private static readonly DISABLED = true;
   private static initialized = false;
   private static currentUserId: string | null = null;
   private static initializationPromise: Promise<void> | null = null;
@@ -27,34 +33,16 @@ export class Analytics {
   private static deviceInfo: DeviceInfo | null = null;
 
   static async init(): Promise<void> {
-    // Prevent duplicate initialization
-    if (this.initialized) {
-      return;
-    }
-
-    // If already initializing, wait for it to complete
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-
-    this.initializationPromise = this.doInit();
-    return this.initializationPromise;
+    // Analytics disabled - do nothing
+    if (this.DISABLED) return;
   }
 
   private static async doInit(): Promise<void> {
-    try {
-      await invoke('init_analytics');
-      this.initialized = true;
-      console.log('Analytics initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize analytics:', error);
-      throw error;
-    } finally {
-      this.initializationPromise = null;
-    }
+    // Analytics disabled - do nothing
   }
 
   static async disable(): Promise<void> {
+    if (this.DISABLED) return;
     try {
       await invoke('disable_analytics');
       this.initialized = false;
@@ -67,6 +55,7 @@ export class Analytics {
   }
 
   static async isEnabled(): Promise<boolean> {
+    if (this.DISABLED) return false;
     try {
       return await invoke('is_analytics_enabled');
     } catch (error) {
@@ -76,6 +65,7 @@ export class Analytics {
   }
 
   static async track(eventName: string, properties?: AnalyticsProperties): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized');
       return;
@@ -89,6 +79,7 @@ export class Analytics {
   }
 
   static async identify(userId: string, properties?: AnalyticsProperties): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized');
       return;
@@ -104,6 +95,7 @@ export class Analytics {
 
   // Enhanced user tracking methods for Phase 1
   static async startSession(userId: string): Promise<string | null> {
+    if (this.DISABLED) return null;
     if (!this.initialized) {
       console.warn('Analytics not initialized');
       return null;
@@ -121,6 +113,7 @@ export class Analytics {
   }
 
   static async endSession(): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -131,6 +124,7 @@ export class Analytics {
   }
 
   static async trackDailyActiveUser(): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -141,6 +135,7 @@ export class Analytics {
   }
 
   static async trackUserFirstLaunch(): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -151,6 +146,7 @@ export class Analytics {
   }
 
   static async isSessionActive(): Promise<boolean> {
+    if (this.DISABLED) return false;
     if (!this.initialized) return false;
 
     try {
@@ -532,6 +528,7 @@ export class Analytics {
 
   // Meeting-specific tracking methods
   static async trackMeetingStarted(meetingId: string, meetingTitle: string): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -542,6 +539,7 @@ export class Analytics {
   }
 
   static async trackRecordingStarted(meetingId: string): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -552,6 +550,7 @@ export class Analytics {
   }
 
   static async trackRecordingStopped(meetingId: string, durationSeconds?: number): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -562,6 +561,7 @@ export class Analytics {
   }
 
   static async trackMeetingDeleted(meetingId: string): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -572,6 +572,7 @@ export class Analytics {
   }
 
   static async trackSettingsChanged(settingType: string, newValue: string): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -582,6 +583,7 @@ export class Analytics {
   }
 
   static async trackFeatureUsed(featureName: string): Promise<void> {
+    if (this.DISABLED) return;
     if (!this.initialized) return;
 
     try {
@@ -593,16 +595,19 @@ export class Analytics {
 
   // Convenience methods for common events
   static async trackPageView(pageName: string): Promise<void> {
+    if (this.DISABLED) return;
     await this.track(`page_view_${pageName}`, { page: pageName });
   }
 
   static async trackButtonClick(buttonName: string, location?: string): Promise<void> {
+    if (this.DISABLED) return;
     const properties: AnalyticsProperties = { button: buttonName };
     if (location) properties.location = location;
     await this.track(`button_click_${buttonName}`, properties);
   }
 
   static async trackError(errorType: string, errorMessage: string): Promise<void> {
+    if (this.DISABLED) return;
     await this.track('error', { 
       error_type: errorType, 
       error_message: errorMessage 
@@ -610,6 +615,7 @@ export class Analytics {
   }
 
   static async trackAppStarted(): Promise<void> {
+    if (this.DISABLED) return;
     await this.track('app_started', { 
       timestamp: new Date().toISOString() 
     });
@@ -629,6 +635,7 @@ export class Analytics {
 
   // Wait for analytics to be initialized
   static async waitForInitialization(timeout: number = 5000): Promise<boolean> {
+    if (this.DISABLED) return false;
     if (this.initialized) {
       return true;
     }
@@ -643,6 +650,7 @@ export class Analytics {
 
   // Track backend connection success/failure
   static async trackBackendConnection(success: boolean, error?: string) {
+    if (this.DISABLED) return;
     // Wait for analytics to be initialized
     const isInitialized = await this.waitForInitialization();
     if (!isInitialized) {
@@ -668,6 +676,7 @@ export class Analytics {
 
   // Track transcription errors
   static async trackTranscriptionError(errorMessage: string) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping transcription error tracking');
       return;
@@ -690,6 +699,7 @@ export class Analytics {
 
   // Track transcription success
   static async trackTranscriptionSuccess(duration?: number) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping transcription success tracking');
       return;
@@ -717,6 +727,7 @@ export class Analytics {
     transcriptLength: number,
     timeSinceRecordingMinutes?: number
   ) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping summary generation started tracking');
       return;
@@ -757,6 +768,7 @@ export class Analytics {
     durationSeconds?: number, 
     errorMessage?: string
   ) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping summary generation completed tracking');
       return;
@@ -778,6 +790,7 @@ export class Analytics {
   }
 
   static async trackSummaryRegenerated(modelProvider: string, modelName: string) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping summary regenerated tracking');
       return;
@@ -796,6 +809,7 @@ export class Analytics {
   }
 
   static async trackModelChanged(oldProvider: string, oldModel: string, newProvider: string, newModel: string) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping model changed tracking');
       return;
@@ -816,6 +830,7 @@ export class Analytics {
   }
 
   static async trackCustomPromptUsed(promptLength: number) {
+    if (this.DISABLED) return;
     if (!this.initialized) {
       console.warn('Analytics not initialized, skipping custom prompt used tracking');
       return;

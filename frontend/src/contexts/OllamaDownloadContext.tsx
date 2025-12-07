@@ -42,6 +42,9 @@ export function OllamaDownloadProvider({ children }: { children: React.ReactNode
    * These persist for the lifetime of the app, unlike modal-scoped listeners
    */
   useEffect(() => {
+    // Skip on server-side
+    if (typeof window === 'undefined') return;
+    
     console.log('[OllamaDownloadContext] Setting up event listeners');
     const unsubscribers: (() => void)[] = [];
 

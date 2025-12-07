@@ -103,6 +103,9 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
    * Set up event listeners for backend state changes
    */
   useEffect(() => {
+    // Skip on server-side
+    if (typeof window === 'undefined') return;
+    
     console.log('[RecordingStateContext] Setting up event listeners');
     const unsubscribers: (() => void)[] = [];
 
@@ -177,6 +180,9 @@ export function RecordingStateProvider({ children }: { children: React.ReactNode
    * If backend is recording but UI state is false, this will correct it
    */
   useEffect(() => {
+    // Skip on server-side
+    if (typeof window === 'undefined') return;
+    
     console.log('[RecordingStateContext] Initial mount - syncing with backend');
     syncWithBackend();
   }, []);

@@ -15,12 +15,8 @@ import { PermissionWarning } from '@/components/PermissionWarning';
 import { PreferenceSettings } from '@/components/PreferenceSettings';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import { useRecordingState } from '@/contexts/RecordingStateContext';
-import { listen } from '@tauri-apps/api/event';
-import { writeTextFile } from '@tauri-apps/plugin-fs';
-import { downloadDir } from '@tauri-apps/api/path';
-import { listenerCount } from 'process';
-import { invoke } from '@tauri-apps/api/core';
 import { useNavigation } from '@/hooks/useNavigation';
+import { invoke, listen, appDataDir, downloadDir, writeTextFile } from '@/lib/tauri';
 import { useRouter } from 'next/navigation';
 import type { CurrentMeeting } from '@/components/Sidebar/SidebarProvider';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -570,6 +566,134 @@ export default function Home() {
       }
     };
   }, []);
+
+  // Refs for meeting detection to avoid stale closures
+  const isRecordingRef = useRef(isRecording);
+  const isMeetingActiveRef = useRef(isMeetingActive);
+  const selectedDevicesRef = useRef(selectedDevices);
+  
+  // Keep refs updated
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+  
+  useEffect(() => {
+    isMeetingActiveRef.current = isMeetingActive;
+  }, [isMeetingActive]);
+  
+  useEffect(() => {
+    selectedDevicesRef.current = selectedDevices;
+  }, [selectedDevices]);
+
+  // Set up meeting detection auto-start/stop listeners
+  useEffect(() => {
+    // Skip on server-side
+    if (typeof window === 'undefined') return;
+    
+    const unlisteners: (() => void)[] = [];
+
+    const setupMeetingDetectionListeners = async () => {
+      try {
+        console.log('Setting up meeting detection listeners...');
+        
+        // Listen for auto-start recording event from meeting detection
+        const unlistenAutoStart = await listen<{ meeting_name: string; app_name: string }>('auto-start-recording', async (event) => {
+          console.log('🎯 Auto-start recording event received:', event.payload);
+          
+          // Don't start if already recording (use refs to avoid stale closure)
+          if (isRecordingRef.current || isMeetingActiveRef.current) {
+            console.log('Already recording, ignoring auto-start event');
+            return;
+          }
+          
+          try {
+            const meetingName = event.payload.meeting_name || `${event.payload.app_name} Meeting`;
+            console.log('Auto-starting recording for detected meeting:', meetingName);
+            
+            const result = await invoke('start_recording_with_devices_and_meeting', {
+              mic_device_name: selectedDevicesRef.current?.micDevice || null,
+              system_device_name: selectedDevicesRef.current?.systemDevice || null,
+              meeting_name: meetingName
+            });
+            console.log('Auto-start recording result:', result);
+            
+            // Update UI state
+            setMeetingTitle(meetingName);
+            setIsRecordingState(true);
+            setTranscripts([]);
+            setIsMeetingActive(true);
+            Analytics.trackButtonClick('start_recording', 'meeting_detection_auto');
+            
+            // Show recording notification
+            await showRecordingNotification();
+            
+            toast.success(`Recording started for ${event.payload.app_name} meeting`);
+          } catch (error) {
+            console.error('Failed to auto-start recording:', error);
+            toast.error('Failed to auto-start recording');
+          }
+        });
+        unlisteners.push(unlistenAutoStart);
+        
+        // Listen for auto-stop recording event from meeting detection
+        const unlistenAutoStop = await listen('auto-stop-recording', async () => {
+          console.log('🛑 Auto-stop recording event received');
+          
+          if (!isRecordingRef.current && !isMeetingActiveRef.current) {
+            console.log('Not recording, ignoring auto-stop event');
+            return;
+          }
+          
+          try {
+            console.log('Auto-stopping recording due to meeting end');
+            
+            // Get the save path for the recording
+            const dataDir = await appDataDir();
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const savePath = `${dataDir}recording-${timestamp}.wav`;
+            
+            await invoke('stop_recording', { 
+              args: {
+                save_path: savePath
+              }
+            });
+            
+            setIsRecordingState(false);
+            setIsMeetingActive(false);
+            Analytics.trackButtonClick('stop_recording', 'meeting_detection_auto');
+            
+            toast.success('Recording stopped - meeting ended', {
+              description: 'Your recording has been saved'
+            });
+          } catch (error) {
+            console.error('Failed to auto-stop recording:', error);
+            toast.error('Failed to stop recording automatically');
+          }
+        });
+        unlisteners.push(unlistenAutoStop);
+        
+        // Listen for meeting detected notification
+        const unlistenMeetingDetected = await listen<{ app_name: string; process_name: string }>('meeting-detected', (event) => {
+          console.log('📹 Meeting detected:', event.payload);
+          toast.info(`${event.payload.app_name} meeting detected`, {
+            description: 'Auto-recording will start if enabled in settings'
+          });
+        });
+        unlisteners.push(unlistenMeetingDetected);
+        
+        console.log('✅ Meeting detection listeners setup complete');
+      } catch (error) {
+        console.error('Failed to setup meeting detection listeners:', error);
+      }
+    };
+
+    setupMeetingDetectionListeners();
+
+    return () => {
+      console.log('Cleaning up meeting detection listeners...');
+      unlisteners.forEach(unlisten => unlisten());
+    };
+  }, []); // Empty dependency array - listeners set up once
 
   // Set up recording-stopped listener for meeting navigation
   useEffect(() => {
@@ -1616,7 +1740,7 @@ export default function Home() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex flex-col h-screen bg-gray-50"
+      className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900"
     >
       {showErrorAlert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1652,9 +1776,9 @@ export default function Home() {
       )}
       <div className="flex flex-1 overflow-hidden">
         {/* Left side - Transcript */}
-        <div ref={transcriptContainerRef} className="w-full border-r border-gray-200 bg-white flex flex-col overflow-y-auto">
+        <div ref={transcriptContainerRef} className="w-full border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col overflow-y-auto">
           {/* Title area - Sticky header */}
-          <div className="sticky top-0 z-10 bg-white p-4 border-gray-200">
+          <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 border-gray-200 dark:border-gray-700">
             <div className="flex flex-col space-y-3">
               <div className="flex  flex-col space-y-2">
                 <div className="flex justify-center  items-center space-x-2">
