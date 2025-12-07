@@ -49,6 +49,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Key Features in Action](#key-features-in-action)
+- [Dark Mode (Fork Feature)](#-dark-mode-fork-feature)
 - [Meeting Auto-Detection (Fork Feature)](#meeting-auto-detection-fork-feature)
 - [System Architecture](#system-architecture)
 - [For Developers](#for-developers)
@@ -94,6 +95,7 @@ Whether you're a defense consultant, enterprise executive, legal professional, o
 - **Multi-Platform:** Works on macOS, Windows, and Linux.
 - **Open Source:** Meetily is open source and free to use.
 - **🆕 Meeting Auto-Detection:** Automatically detect Zoom, Microsoft Teams, and Google Meet meetings and start recording (Fork feature).
+- **🆕 Dark Mode:** Full dark mode support with Light, Dark, and System theme options.
 
 ## Installation
 
@@ -176,6 +178,16 @@ Built-in support for hardware acceleration across platforms:
 - **Windows/Linux**: NVIDIA (CUDA), AMD/Intel (Vulkan)
 
 Automatically enabled at build time - no configuration needed.
+
+### 🌙 Dark Mode (Fork Feature)
+
+Full theme support with three options:
+
+- **Light Mode:** Clean, bright interface for daytime use
+- **Dark Mode:** Eye-friendly dark interface for low-light environments
+- **System:** Automatically matches your operating system's theme preference
+
+Configure your preferred theme in Settings → General → Theme.
 
 ## Meeting Auto-Detection (Fork Feature)
 
