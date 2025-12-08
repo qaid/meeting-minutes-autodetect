@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, listen } from '@/lib/tauri';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Video, Monitor, Users, Bell, Play, Square } from 'lucide-react';

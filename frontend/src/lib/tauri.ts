@@ -49,3 +49,13 @@ export const writeTextFile = async (path: string, contents: string): Promise<voi
   const { writeTextFile: tauriWriteTextFile } = await import('@tauri-apps/plugin-fs');
   return tauriWriteTextFile(path, contents);
 };
+
+// Plugin-store load wrapper
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const loadStore = async (name: string, options?: any) => {
+  if (typeof window === 'undefined') {
+    throw new Error('loadStore called during SSR');
+  }
+  const { load } = await import('@tauri-apps/plugin-store');
+  return load(name, options);
+};

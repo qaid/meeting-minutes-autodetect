@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/lib/tauri';
 import { toast } from 'sonner';
 import { Database, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 

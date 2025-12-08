@@ -2,8 +2,7 @@ import React, { useContext, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Info, Loader2 } from 'lucide-react';
 import { AnalyticsContext } from './AnalyticsProvider';
-import { load } from '@tauri-apps/plugin-store';
-import { invoke } from '@tauri-apps/api/core';
+import { loadStore, invoke } from '@/lib/tauri';
 import { Analytics } from '@/lib/analytics';
 import AnalyticsDataModal from './AnalyticsDataModal';
 
@@ -38,7 +37,7 @@ export default function AnalyticsConsentSwitch() {
     setIsProcessing(true);
 
     try {
-      const store = await load('analytics.json', {
+      const store = await loadStore('analytics.json', {
         autoSave: false,
         defaults: {
           analyticsOptedIn: true

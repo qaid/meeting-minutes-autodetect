@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { listen } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/core';
+import { listen, invoke } from '@/lib/tauri';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {

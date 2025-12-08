@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { invoke as invokeTauri } from '@tauri-apps/api/core';
+import { invoke as invokeTauri } from '@/lib/tauri';
 import { toast } from 'sonner';
 
 interface UseMeetingOperationsProps {

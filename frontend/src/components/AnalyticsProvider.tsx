@@ -2,7 +2,7 @@
 
 import React, { useEffect, ReactNode, useRef, useState, createContext } from 'react';
 import Analytics from '@/lib/analytics';
-import { load } from '@tauri-apps/plugin-store';
+import { loadStore } from '@/lib/tauri';
 
 
 interface AnalyticsProviderProps {
@@ -35,7 +35,7 @@ export default function AnalyticsProvider({ children }: AnalyticsProviderProps) 
     }
 
     const initAnalytics = async () => {
-      const store = await load('analytics.json', {
+      const store = await loadStore('analytics.json', {
         autoSave: false,
         defaults: {
           analyticsOptedIn: true
@@ -68,7 +68,7 @@ export default function AnalyticsProvider({ children }: AnalyticsProviderProps) 
         const deviceInfo = await Analytics.getDeviceInfo();
 
         // Store platform info in analytics.json for quick access
-        const store = await load('analytics.json', {
+        const store = await loadStore('analytics.json', {
           autoSave: false,
           defaults: {
             analyticsOptedIn: true

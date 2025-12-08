@@ -1,5 +1,5 @@
 import React from "react";
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/lib/tauri';
 import Image from 'next/image';
 import AnalyticsConsentSwitch from "./AnalyticsConsentSwitch";
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ModelConfig } from '@/components/ModelSettingsModal';
-import { invoke as invokeTauri } from '@tauri-apps/api/core';
+import { invoke as invokeTauri } from '@/lib/tauri';
 import { toast } from 'sonner';
 import Analytics from '@/lib/analytics';
 

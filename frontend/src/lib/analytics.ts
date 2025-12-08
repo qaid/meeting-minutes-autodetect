@@ -1,8 +1,8 @@
 // ANALYTICS DISABLED - All methods are no-ops
 // To re-enable analytics, restore the original implementation and set DISABLED = false
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { invoke } from '@tauri-apps/api/core';
+// Use SSR-safe wrapper instead of direct import
+import { invoke } from '@/lib/tauri';
 
 export interface AnalyticsProperties {
   [key: string]: string;
